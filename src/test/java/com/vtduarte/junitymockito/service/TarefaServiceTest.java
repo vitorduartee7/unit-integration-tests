@@ -3,6 +3,10 @@ package com.vtduarte.junitymockito.service;
 import com.vtduarte.junitymockito.model.PrioridadeTarefaEnum;
 import com.vtduarte.junitymockito.model.StatusTarefaEnum;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
 
 import java.time.LocalDate;
 
@@ -18,6 +22,7 @@ class TarefaServiceTest {
     }
 
     @Nested
+    @DisplayName("Testes do método criar tarefa")
     class CriarTarefa {
 
         @Test
@@ -31,18 +36,7 @@ class TarefaServiceTest {
             var tarefa = tarefaService.criar(titulo, descricao, prioridade, dataVencimento);
 
             assertEquals(titulo, tarefa.getTitulo());
-            Assertions.assertEquals(StatusTarefaEnum.PENDENTE, tarefa.getStatus());
-        }
-
-        @Test
-        @DisplayName("Deve lancar exceṕtion quando o titulo for vazio")
-        void deveLancarExcetionQuandoTituloVazio() {
-            String titulo = "";
-            String descricao = "Beba Agua";
-            PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
-            LocalDate dataVencimento = LocalDate.now().plusDays(1);
-
-            assertThrows(IllegalArgumentException.class, () -> tarefaService.criar(titulo, descricao, prioridade, dataVencimento));
+            assertEquals(StatusTarefaEnum.PENDENTE, tarefa.getStatus());
         }
 
         @Test
@@ -69,5 +63,29 @@ class TarefaServiceTest {
             assertEquals(StatusTarefaEnum.PENDENTE, tarefa.getStatus());
         }
 
+        @ParameterizedTest
+        @EnumSource(PrioridadeTarefaEnum.class)
+        @DisplayName("Deve criar tarefa para qualquer prioridade")
+        void deveCriarTarefaParaQualquerPrioridade(PrioridadeTarefaEnum prioridade) {
+            String titulo = "Hidratar-se";
+            String descricao = "Beba Agua";
+            LocalDate dataVencimento = LocalDate.now().plusDays(1);
+
+            var tarefa = tarefaService.criar(titulo, descricao, prioridade, dataVencimento);
+
+            assertEquals(prioridade, tarefa.getPrioridade());
+        }
+
+        @ParameterizedTest
+        @NullSource
+        @CsvSource({"''", "' '"})
+        @DisplayName("Deve lançar exception para títulos inváilidos")
+        void deveLancarExcecaoParaTitulosInvalidos(String titulo) {
+            String descricao = "Beba Agua";
+            LocalDate dataVencimento = LocalDate.now().plusDays(1);
+            PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
+
+            assertThrows(IllegalArgumentException.class, () -> tarefaService.criar(titulo, descricao, prioridade, dataVencimento));
+        }
     }
 }
