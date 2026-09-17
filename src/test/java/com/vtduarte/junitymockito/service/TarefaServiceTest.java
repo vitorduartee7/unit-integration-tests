@@ -2,6 +2,7 @@ package com.vtduarte.junitymockito.service;
 
 import com.vtduarte.junitymockito.model.PrioridadeTarefaEnum;
 import com.vtduarte.junitymockito.model.StatusTarefaEnum;
+import com.vtduarte.junitymockito.model.TarefaEntity;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -86,6 +87,50 @@ class TarefaServiceTest {
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
 
             assertThrows(IllegalArgumentException.class, () -> tarefaService.criar(titulo, descricao, prioridade, dataVencimento));
+        }
+    }
+
+    @Nested
+    @DisplayName("Testes do método atualizar status")
+    class AtualizarStatus {
+
+        @ParameterizedTest
+        @CsvSource({
+                "PENDENTE, EM_ANDAMENTO",
+                "EM_ANDAMENTO, PENDENTE",
+                "EM_ANDAMENTO, CONCLUIDA",
+                "CONCLUIDA, EM_ANDAMENTO"
+        })
+        @DisplayName("Deve atualizar status quando a transicao for valida")
+        void deveAtualizarStatusQuandoTransicaoValida(StatusTarefaEnum statusAtual, StatusTarefaEnum novoStatus) {
+            var tarefa = new TarefaEntity("Hidrate-se",
+                    "Beba Agua",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            tarefa.setStatus(statusAtual);
+
+            tarefaService.atualizarStatus(tarefa, novoStatus);
+
+            assertEquals(novoStatus, tarefa.getStatus());
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+                "PENDENTE, PENDENTE",
+                "PENDENTE, CONCLUIDA",
+                "EM_ANDAMENTO, EM_ANDAMENTO",
+                "CONCLUIDA, CONCLUIDA",
+                "CONCLUIDA, PENDENTE"
+        })
+        @DisplayName("Deve lancar exception para transicao invalida de status")
+        void deveLancarExceptionParaTransicaoInvalidaDeStatus(StatusTarefaEnum statusAtual, StatusTarefaEnum novoStatus) {
+            var tarefa = new TarefaEntity("Hidrate-se",
+                    "Beba Agua",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            tarefa.setStatus(statusAtual);
+
+            assertThrows(IllegalArgumentException.class, () -> tarefaService.atualizarStatus(tarefa, novoStatus));
         }
     }
 }
