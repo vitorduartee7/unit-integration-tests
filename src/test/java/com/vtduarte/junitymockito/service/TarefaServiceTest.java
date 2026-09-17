@@ -1,42 +1,69 @@
 package com.vtduarte.junitymockito.service;
 
+import com.vtduarte.junitymockito.exception.ResourceNotFoundException;
 import com.vtduarte.junitymockito.model.PrioridadeTarefaEnum;
 import com.vtduarte.junitymockito.model.StatusTarefaEnum;
 import com.vtduarte.junitymockito.model.TarefaEntity;
+import com.vtduarte.junitymockito.repository.TarefaRepository;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class TarefaServiceTest {
 
-    TarefaService tarefaService;
+    @Mock
+    TarefaRepository tarefaRepository;
 
-    @BeforeEach
-    void setUp() {
-        tarefaService = new TarefaService();
-    }
+    @InjectMocks
+    TarefaService tarefaService;
 
     @Nested
     @DisplayName("Testes do método criar tarefa")
     class CriarTarefa {
 
         @Test
-        @DisplayName("Deve criar tarefa com dados validos")
+        @DisplayName("Deve criar e salvar tarefa com dados validos")
         void deveCriarTarefaComDadosValidos() {
-            String titulo = "Hidratar-se";
+            String titulo = "Hidrate-se";
             String descricao = "Beba Agua";
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
             LocalDate dataVencimento = LocalDate.now().plusDays(1);
+            when(tarefaRepository.salvar(any()))
+                    .thenAnswer(inv -> inv.getArgument(0));
 
             var tarefa = tarefaService.criar(titulo, descricao, prioridade, dataVencimento);
 
             assertEquals(titulo, tarefa.getTitulo());
+            verify(tarefaRepository).salvar(tarefa);
+        }
+
+        @Test
+        @DisplayName("Deve criar tarefa com data de vencimento nula")
+        void deveCriarTarefaComDataVencimentoNula() {
+            String titulo = "Hidrate-se";
+            String descricao = "Beba Agua";
+            PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
+            when(tarefaRepository.salvar(any()))
+                    .thenAnswer(inv -> inv.getArgument(0));
+
+            var tarefa = tarefaService.criar(titulo, descricao, prioridade, null);
+
+            assertNull(tarefa.getDataVencimento());
             assertEquals(StatusTarefaEnum.PENDENTE, tarefa.getStatus());
         }
 
@@ -52,16 +79,16 @@ class TarefaServiceTest {
         }
 
         @Test
-        @DisplayName("Deve criar tarefa com data de vencimento nula")
-        void deveCriarTarefaComDataVencimentoNula() {
-            String titulo = "Hidrate-se";
+        @DisplayName("Deve lancar exception quando validacao falha")
+        void deveLancarExceptionQuandoValidacaoFalha() {
+            String titulo = "";
             String descricao = "Beba Agua";
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
+            LocalDate dataVencimento = LocalDate.now().plusDays(1);
 
-            var tarefa = tarefaService.criar(titulo, descricao, prioridade, null);
-
-            assertNull(tarefa.getDataVencimento());
-            assertEquals(StatusTarefaEnum.PENDENTE, tarefa.getStatus());
+            assertThrows(IllegalArgumentException.class,
+                    () -> tarefaService.criar(titulo, descricao, prioridade, dataVencimento));
+            verify(tarefaRepository, never()).salvar(any());
         }
 
         @ParameterizedTest
@@ -71,6 +98,8 @@ class TarefaServiceTest {
             String titulo = "Hidratar-se";
             String descricao = "Beba Agua";
             LocalDate dataVencimento = LocalDate.now().plusDays(1);
+            when(tarefaRepository.salvar(any()))
+                    .thenAnswer(inv -> inv.getArgument(0));
 
             var tarefa = tarefaService.criar(titulo, descricao, prioridade, dataVencimento);
 
@@ -81,12 +110,71 @@ class TarefaServiceTest {
         @NullSource
         @CsvSource({"''", "' '"})
         @DisplayName("Deve lançar exception para títulos inváilidos")
-        void deveLancarExcecaoParaTitulosInvalidos(String titulo) {
+        void deveLancarExceptionParaTitulosInvalidos(String titulo) {
             String descricao = "Beba Agua";
             LocalDate dataVencimento = LocalDate.now().plusDays(1);
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
 
             assertThrows(IllegalArgumentException.class, () -> tarefaService.criar(titulo, descricao, prioridade, dataVencimento));
+        }
+    }
+
+    @Nested
+    @DisplayName("Testes do método criar tarefa")
+    class BuscarPorId {
+
+        @Test
+        @DisplayName("Deve retornar tarefa quando encontrada")
+        void deveRetornarTarefaQuandoEncontrada() {
+            var tarefa = new TarefaEntity("Tarefa", "Tarefa", PrioridadeTarefaEnum.ALTA, LocalDate.now().plusDays(1));
+            tarefa.setId(1L);
+            when(tarefaRepository.buscarPorId(1L))
+                    .thenReturn(Optional.of(tarefa));
+
+            var tarefaBuscada = tarefaService.buscarPorId(1L);
+
+            assertEquals(tarefa, tarefaBuscada);
+            verify(tarefaRepository).buscarPorId(1L);
+        }
+
+        @Test
+        @DisplayName("Deve lancar exception quando tarefa nao for encontrada")
+        void deveLancarExceptionQuandoTarefaNaoEncontrada() {
+            when(tarefaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class, () -> tarefaService.buscarPorId(99L));
+            verify(tarefaRepository).buscarPorId(99L);
+        }
+    }
+
+    @Nested
+    @DisplayName("Testes do método listar pendentes")
+    class ListarPendentes {
+
+        @Test
+        @DisplayName("Deve retornar uma lista de tarefas pendentes")
+        void deveListarTarefasPendentes() {
+            var tarefa1 = new TarefaEntity("Tarefa1", "Tarefa1", PrioridadeTarefaEnum.ALTA,  LocalDate.now().plusDays(1));
+            var tarefa2 = new TarefaEntity("Tarefa2", "Tarefa2", PrioridadeTarefaEnum.ALTA,  LocalDate.now().plusDays(1));
+            List<TarefaEntity> listaComDuasTarefas = List.of(tarefa1, tarefa2);
+            when(tarefaRepository.listarPorStatus(StatusTarefaEnum.PENDENTE))
+                    .thenReturn(listaComDuasTarefas);
+
+            var lista = tarefaService.listarPendentes();
+
+            assertEquals(listaComDuasTarefas, lista);
+        }
+
+        @Test
+        @DisplayName("Deve retornar uma lista vazia quando nao tiver tarefa pendente")
+        void deveRetornarListaVaziaQuandoNaoTiverTarefaPendente() {
+            List<TarefaEntity> listaVazia = List.of();
+            when(tarefaRepository.listarPorStatus(StatusTarefaEnum.PENDENTE))
+                    .thenReturn(listaVazia);
+
+            var lista = tarefaService.listarPendentes();
+
+            assertTrue(lista.isEmpty());
         }
     }
 

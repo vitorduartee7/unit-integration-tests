@@ -7,6 +7,7 @@ import com.vtduarte.junitymockito.model.TarefaEntity;
 import com.vtduarte.junitymockito.repository.TarefaRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class TarefaService {
 
@@ -36,7 +37,11 @@ public class TarefaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tarefa nao encontrada"));
     }
 
-    public TarefaEntity atualizarStatus(TarefaEntity tarefa, StatusTarefaEnum novoStatus) {
+    public List<TarefaEntity> listarPendentes() {
+        return tarefaRepository.listarPorStatus(StatusTarefaEnum.PENDENTE);
+    }
+
+    public void atualizarStatus(TarefaEntity tarefa, StatusTarefaEnum novoStatus) {
 
         StatusTarefaEnum statusAtual = tarefa.getStatus();
 
@@ -61,7 +66,5 @@ public class TarefaService {
                 }
                 break;
         }
-
-        return tarefa;
     }
 }
