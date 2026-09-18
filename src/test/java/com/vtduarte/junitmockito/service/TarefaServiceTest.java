@@ -43,6 +43,7 @@ class TarefaServiceTest {
             String descricao = "Beba Agua";
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
             LocalDate dataVencimento = LocalDate.now().plusDays(1);
+
             when(tarefaRepository.salvar(any()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
@@ -58,6 +59,7 @@ class TarefaServiceTest {
             String titulo = "Hidrate-se";
             String descricao = "Beba Agua";
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
+
             when(tarefaRepository.salvar(any()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
@@ -75,7 +77,8 @@ class TarefaServiceTest {
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
             LocalDate dataVencimento = LocalDate.now().minusDays(1);
 
-            assertThrows(IllegalArgumentException.class, () -> tarefaService.criar(titulo, descricao, prioridade, dataVencimento));
+            assertThrows(IllegalArgumentException.class,
+                    () -> tarefaService.criar(titulo, descricao, prioridade, dataVencimento));
         }
 
         @Test
@@ -98,6 +101,7 @@ class TarefaServiceTest {
             String titulo = "Hidratar-se";
             String descricao = "Beba Agua";
             LocalDate dataVencimento = LocalDate.now().plusDays(1);
+
             when(tarefaRepository.salvar(any()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
@@ -115,7 +119,8 @@ class TarefaServiceTest {
             LocalDate dataVencimento = LocalDate.now().plusDays(1);
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
 
-            assertThrows(IllegalArgumentException.class, () -> tarefaService.criar(titulo, descricao, prioridade, dataVencimento));
+            assertThrows(IllegalArgumentException.class,
+                    () -> tarefaService.criar(titulo, descricao, prioridade, dataVencimento));
         }
     }
 
@@ -132,6 +137,7 @@ class TarefaServiceTest {
                     PrioridadeTarefaEnum.ALTA,
                     LocalDate.now().plusDays(1));
             tarefa.setId(1L);
+
             when(tarefaRepository.buscarPorId(1L))
                     .thenReturn(Optional.of(tarefa));
 
@@ -144,9 +150,11 @@ class TarefaServiceTest {
         @Test
         @DisplayName("Deve lancar exception quando tarefa nao for encontrada")
         void deveLancarExceptionQuandoTarefaNaoEncontrada() {
-            when(tarefaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
+            when(tarefaRepository.buscarPorId(99L))
+                    .thenReturn(Optional.empty());
 
-            assertThrows(TarefaNaoEncontradaException.class, () -> tarefaService.buscarPorId(99L));
+            assertThrows(TarefaNaoEncontradaException.class,
+                    () -> tarefaService.buscarPorId(99L));
             verify(tarefaRepository).buscarPorId(99L);
         }
     }
@@ -158,9 +166,18 @@ class TarefaServiceTest {
         @Test
         @DisplayName("Deve retornar uma lista de tarefas pendentes")
         void deveListarTarefasPendentes() {
-            var tarefa1 = new TarefaEntity("Tarefa1", "Tarefa1", PrioridadeTarefaEnum.ALTA,  LocalDate.now().plusDays(1));
-            var tarefa2 = new TarefaEntity("Tarefa2", "Tarefa2", PrioridadeTarefaEnum.ALTA,  LocalDate.now().plusDays(1));
+            var tarefa1 = new TarefaEntity(
+                    "Tarefa1",
+                    "Tarefa1",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            var tarefa2 = new TarefaEntity(
+                    "Tarefa2",
+                    "Tarefa2",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
             List<TarefaEntity> listaComDuasTarefas = List.of(tarefa1, tarefa2);
+
             when(tarefaRepository.listarPorStatus(StatusTarefaEnum.PENDENTE))
                     .thenReturn(listaComDuasTarefas);
 
@@ -195,6 +212,7 @@ class TarefaServiceTest {
                     PrioridadeTarefaEnum.ALTA,
                     LocalDate.now().plusDays(1));
             tarefa.setId(1L);
+
             when(tarefaRepository.buscarPorId(1L))
                     .thenReturn(Optional.of(tarefa));
 
@@ -223,6 +241,25 @@ class TarefaServiceTest {
 
             assertThrows(RuntimeException.class,
                     () -> tarefaService.excluir(99L));
+        }
+
+        @Test
+        @DisplayName("Deve propagar exception quando repository falha ao excluir")
+        void devePropagarExceptionQuandoRepositoryFalhaAoExcluir() {
+            var tarefa = new TarefaEntity(
+                    "Tarefa",
+                    "Tarefa",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            tarefa.setId(1L);
+
+            when(tarefaRepository.buscarPorId(1L))
+                    .thenReturn(Optional.of(tarefa));
+            doThrow(new RuntimeException("Falha ao excluir"))
+                    .when(tarefaRepository).excluir(1L);
+
+            assertThrows(RuntimeException.class,
+                    () -> tarefaService.excluir(1L));
         }
     }
 
