@@ -1,6 +1,5 @@
 package com.vtduarte.junitmockito.service;
 
-import com.vtduarte.junitmockito.exception.ResourceNotFoundException;
 import com.vtduarte.junitmockito.exception.TarefaNaoEncontradaException;
 import com.vtduarte.junitmockito.model.PrioridadeTarefaEnum;
 import com.vtduarte.junitmockito.model.StatusTarefaEnum;
@@ -127,7 +126,11 @@ class TarefaServiceTest {
         @Test
         @DisplayName("Deve retornar tarefa quando encontrada")
         void deveRetornarTarefaQuandoEncontrada() {
-            var tarefa = new TarefaEntity("Tarefa", "Tarefa", PrioridadeTarefaEnum.ALTA, LocalDate.now().plusDays(1));
+            var tarefa = new TarefaEntity(
+                    "Tarefa",
+                    "Tarefa",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
             tarefa.setId(1L);
             when(tarefaRepository.buscarPorId(1L))
                     .thenReturn(Optional.of(tarefa));
@@ -176,6 +179,50 @@ class TarefaServiceTest {
             var lista = tarefaService.listarPendentes();
 
             assertTrue(lista.isEmpty());
+        }
+    }
+
+    @Nested
+    @DisplayName("Testes do método excluir")
+    class Excluir {
+
+        @Test
+        @DisplayName("Deve excluir tarefa existente")
+        void deveExcluirTarefaExistente() {
+            var tarefa = new TarefaEntity(
+                    "Tarefa",
+                    "Tarefa",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            tarefa.setId(1L);
+            when(tarefaRepository.buscarPorId(1L))
+                    .thenReturn(Optional.of(tarefa));
+
+            tarefaService.excluir(1L);
+
+            verify(tarefaRepository).excluir(1L);
+        }
+
+        @Test
+        @DisplayName("Deve lancar exception ao excluir tarefa inexistente")
+        void deveLancarExceptionAoExcluirTarefaInexistente() {
+            when(tarefaRepository.buscarPorId(99L))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(TarefaNaoEncontradaException.class,
+                    () -> tarefaService.excluir(99L));
+
+            verify(tarefaRepository, never()).excluir(anyLong());
+        }
+
+        @Test
+        @DisplayName("Deve propagar exception quando repository falha ao buscar")
+        void devePropagarExceptionQuandoRepositoryFalhaAoBuscar() {
+            when(tarefaRepository.buscarPorId(anyLong()))
+                    .thenThrow(new RuntimeException());
+
+            assertThrows(RuntimeException.class,
+                    () -> tarefaService.excluir(99L));
         }
     }
 
