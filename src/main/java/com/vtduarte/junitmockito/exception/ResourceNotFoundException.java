@@ -1,4 +1,4 @@
-package com.vtduarte.junitymockito.exception;
+package com.vtduarte.junitmockito.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

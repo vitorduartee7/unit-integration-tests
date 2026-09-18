@@ -1,4 +1,4 @@
-package com.vtduarte.junitymockito.model;
+package com.vtduarte.junitmockito.model;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

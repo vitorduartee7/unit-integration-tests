@@ -1,10 +1,10 @@
-package com.vtduarte.junitymockito.service;
+package com.vtduarte.junitmockito.service;
 
-import com.vtduarte.junitymockito.exception.ResourceNotFoundException;
-import com.vtduarte.junitymockito.model.PrioridadeTarefaEnum;
-import com.vtduarte.junitymockito.model.StatusTarefaEnum;
-import com.vtduarte.junitymockito.model.TarefaEntity;
-import com.vtduarte.junitymockito.repository.TarefaRepository;
+import com.vtduarte.junitmockito.exception.ResourceNotFoundException;
+import com.vtduarte.junitmockito.model.PrioridadeTarefaEnum;
+import com.vtduarte.junitmockito.model.StatusTarefaEnum;
+import com.vtduarte.junitmockito.model.TarefaEntity;
+import com.vtduarte.junitmockito.repository.TarefaRepository;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;

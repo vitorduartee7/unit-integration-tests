@@ -1,4 +1,4 @@
-package com.vtduarte.junitymockito.exception;
+package com.vtduarte.junitmockito.exception;
 
 public class TarefaNaoEncontradaException extends RuntimeException {
     public TarefaNaoEncontradaException(Long id) {

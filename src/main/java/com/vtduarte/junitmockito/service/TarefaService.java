@@ -1,10 +1,10 @@
-package com.vtduarte.junitymockito.service;
+package com.vtduarte.junitmockito.service;
 
-import com.vtduarte.junitymockito.exception.ResourceNotFoundException;
-import com.vtduarte.junitymockito.model.PrioridadeTarefaEnum;
-import com.vtduarte.junitymockito.model.StatusTarefaEnum;
-import com.vtduarte.junitymockito.model.TarefaEntity;
-import com.vtduarte.junitymockito.repository.TarefaRepository;
+import com.vtduarte.junitmockito.exception.ResourceNotFoundException;
+import com.vtduarte.junitmockito.model.PrioridadeTarefaEnum;
+import com.vtduarte.junitmockito.model.StatusTarefaEnum;
+import com.vtduarte.junitmockito.model.TarefaEntity;
+import com.vtduarte.junitmockito.repository.TarefaRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -39,6 +39,11 @@ public class TarefaService {
 
     public List<TarefaEntity> listarPendentes() {
         return tarefaRepository.listarPorStatus(StatusTarefaEnum.PENDENTE);
+    }
+
+    public void excluir(Long id) {
+        TarefaEntity tarefa = buscarPorId(id); // lança TarefaNaoEncontradaException se não existir
+        tarefaRepository.excluir(tarefa.getId());
     }
 
     public void atualizarStatus(TarefaEntity tarefa, StatusTarefaEnum novoStatus) {
