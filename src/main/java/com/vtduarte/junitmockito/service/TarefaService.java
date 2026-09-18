@@ -1,6 +1,6 @@
 package com.vtduarte.junitmockito.service;
 
-import com.vtduarte.junitmockito.exception.ResourceNotFoundException;
+import com.vtduarte.junitmockito.exception.TarefaNaoEncontradaException;
 import com.vtduarte.junitmockito.model.PrioridadeTarefaEnum;
 import com.vtduarte.junitmockito.model.StatusTarefaEnum;
 import com.vtduarte.junitmockito.model.TarefaEntity;
@@ -34,7 +34,7 @@ public class TarefaService {
 
     public TarefaEntity buscarPorId(Long idTarefa) {
         return tarefaRepository.buscarPorId(idTarefa)
-                .orElseThrow(() -> new ResourceNotFoundException("Tarefa nao encontrada"));
+                .orElseThrow(() -> new TarefaNaoEncontradaException(idTarefa));
     }
 
     public List<TarefaEntity> listarPendentes() {
@@ -42,7 +42,7 @@ public class TarefaService {
     }
 
     public void excluir(Long id) {
-        TarefaEntity tarefa = buscarPorId(id); // lança TarefaNaoEncontradaException se não existir
+        TarefaEntity tarefa = buscarPorId(id);
         tarefaRepository.excluir(tarefa.getId());
     }
 

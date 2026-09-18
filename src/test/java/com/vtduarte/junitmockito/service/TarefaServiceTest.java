@@ -1,6 +1,7 @@
 package com.vtduarte.junitmockito.service;
 
 import com.vtduarte.junitmockito.exception.ResourceNotFoundException;
+import com.vtduarte.junitmockito.exception.TarefaNaoEncontradaException;
 import com.vtduarte.junitmockito.model.PrioridadeTarefaEnum;
 import com.vtduarte.junitmockito.model.StatusTarefaEnum;
 import com.vtduarte.junitmockito.model.TarefaEntity;
@@ -142,7 +143,7 @@ class TarefaServiceTest {
         void deveLancarExceptionQuandoTarefaNaoEncontrada() {
             when(tarefaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-            assertThrows(ResourceNotFoundException.class, () -> tarefaService.buscarPorId(99L));
+            assertThrows(TarefaNaoEncontradaException.class, () -> tarefaService.buscarPorId(99L));
             verify(tarefaRepository).buscarPorId(99L);
         }
     }
