@@ -17,7 +17,12 @@ public class TarefaService {
         this.tarefaRepository = tarefaRepository;
     }
 
-    public TarefaEntity criar(String titulo, String descricao, PrioridadeTarefaEnum prioridade, LocalDate dataVencimento) {
+    public TarefaEntity criar(
+            String titulo,
+            String descricao,
+            PrioridadeTarefaEnum prioridade,
+            LocalDate dataVencimento
+    ) {
 
         if (titulo == null || titulo.isBlank()) {
             throw new IllegalArgumentException("Titulo e obrigatorio");
@@ -32,9 +37,9 @@ public class TarefaService {
         return tarefaRepository.salvar(tarefa);
     }
 
-    public TarefaEntity buscarPorId(Long idTarefa) {
-        return tarefaRepository.buscarPorId(idTarefa)
-                .orElseThrow(() -> new TarefaNaoEncontradaException(idTarefa));
+    public TarefaEntity buscarPorId(Long id) {
+        return tarefaRepository.buscarPorId(id)
+                .orElseThrow(() -> new TarefaNaoEncontradaException(id));
     }
 
     public List<TarefaEntity> listarPendentes() {
@@ -44,6 +49,15 @@ public class TarefaService {
     public void excluir(Long id) {
         TarefaEntity tarefa = buscarPorId(id);
         tarefaRepository.excluir(tarefa.getId());
+    }
+
+    public void atualizarPrioridade(Long id, PrioridadeTarefaEnum prioridade) {
+
+        var tarefa = buscarPorId(id);
+
+        tarefa.setPrioridade(prioridade);
+
+        tarefaRepository.salvar(tarefa);
     }
 
     public void atualizarStatus(TarefaEntity tarefa, StatusTarefaEnum novoStatus) {
