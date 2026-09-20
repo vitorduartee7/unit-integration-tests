@@ -11,6 +11,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,6 +34,9 @@ class TarefaServiceTest {
     @InjectMocks
     TarefaService tarefaService;
 
+    @Captor
+    private ArgumentCaptor<TarefaEntity> tarefaCaptor;
+
     @Nested
     @DisplayName("Testes do método criar tarefa")
     class CriarTarefa {
@@ -51,6 +56,29 @@ class TarefaServiceTest {
 
             assertEquals(titulo, tarefa.getTitulo());
             verify(tarefaRepository).salvar(tarefa);
+        }
+
+        @Test
+        @DisplayName("Deve criar e salvar tarefa com campos corretos")
+        void deveCriarTarefaComCamposCorretos() {
+            String titulo = "Hidrate-se";
+            String descricao = "Beba Agua";
+            PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
+            LocalDate dataVencimento = LocalDate.now().plusDays(1);
+
+            when(tarefaRepository.salvar(any()))
+                    .thenAnswer(inv -> inv.getArgument(0));
+
+            tarefaService.criar(titulo, descricao, prioridade, dataVencimento);
+
+            verify(tarefaRepository).salvar(tarefaCaptor.capture());
+
+            var tarefaSalva = tarefaCaptor.getValue();
+            assertEquals(titulo, tarefaSalva.getTitulo());
+            assertEquals(descricao, tarefaSalva.getDescricao());
+            assertEquals(prioridade, tarefaSalva.getPrioridade());
+            assertEquals(StatusTarefaEnum.PENDENTE, tarefaSalva.getStatus());
+            assertEquals(dataVencimento, tarefaSalva.getDataVencimento());
         }
 
         @Test
@@ -125,7 +153,7 @@ class TarefaServiceTest {
     }
 
     @Nested
-    @DisplayName("Testes do método criar tarefa")
+    @DisplayName("Testes do método buscar por id")
     class BuscarPorId {
 
         @Test
@@ -200,66 +228,54 @@ class TarefaServiceTest {
     }
 
     @Nested
-    @DisplayName("Testes do método excluir")
-    class Excluir {
+    @DisplayName("Testes do método marcar como concluida")
+    class MarcarComoConcluida {
 
         @Test
-        @DisplayName("Deve excluir tarefa existente")
-        void deveExcluirTarefaExistente() {
+        @DisplayName("Deve marcar tarefa como concluida")
+        void deveMarcarTarefaComoConcluida() {
             var tarefa = new TarefaEntity(
-                    "Tarefa",
-                    "Tarefa",
+                    "Hidrate-se",
+                    "Beba agua",
                     PrioridadeTarefaEnum.ALTA,
                     LocalDate.now().plusDays(1));
             tarefa.setId(1L);
+            tarefa.setStatus(StatusTarefaEnum.EM_ANDAMENTO);
 
             when(tarefaRepository.buscarPorId(1L))
                     .thenReturn(Optional.of(tarefa));
+            when(tarefaRepository.salvar(any()))
+                    .thenReturn(tarefa);
 
-            tarefaService.excluir(1L);
+            tarefaService.marcarComoConcluida(1L);
 
-            verify(tarefaRepository).excluir(1L);
+            verify(tarefaRepository).buscarPorId(1L);
+            verify(tarefaRepository).salvar(tarefaCaptor.capture());
+
+            var tarefaSalva = tarefaCaptor.getValue();
+            assertNotNull(tarefaSalva.getConcluidaEm());
+            assertEquals(StatusTarefaEnum.CONCLUIDA, tarefaSalva.getStatus());
         }
 
-        @Test
-        @DisplayName("Deve lancar exception ao excluir tarefa inexistente")
-        void deveLancarExceptionAoExcluirTarefaInexistente() {
-            when(tarefaRepository.buscarPorId(99L))
-                    .thenReturn(Optional.empty());
+            @Test
+            @DisplayName("Deve lançar exception quando transição inválida")
+            void deveLancarExceptionQuandoTransicaoInvalida() {
+                var tarefa = new TarefaEntity(
+                        "Hidrate-se",
+                        "Beba agua",
+                        PrioridadeTarefaEnum.ALTA,
+                        LocalDate.now().plusDays(1));
+                tarefa.setId(1L);
 
-            assertThrows(TarefaNaoEncontradaException.class,
-                    () -> tarefaService.excluir(99L));
-            verify(tarefaRepository, never()).excluir(anyLong());
-        }
+                when(tarefaRepository.buscarPorId(1L))
+                        .thenReturn(Optional.of(tarefa));
 
-        @Test
-        @DisplayName("Deve propagar exception quando repository falha ao buscar")
-        void devePropagarExceptionQuandoRepositoryFalhaAoBuscar() {
-            when(tarefaRepository.buscarPorId(anyLong()))
-                    .thenThrow(new RuntimeException());
+                assertThrows(IllegalArgumentException.class,
+                        () -> tarefaService.marcarComoConcluida(1L));
 
-            assertThrows(RuntimeException.class,
-                    () -> tarefaService.excluir(99L));
-        }
-
-        @Test
-        @DisplayName("Deve propagar exception quando repository falha ao excluir")
-        void devePropagarExceptionQuandoRepositoryFalhaAoExcluir() {
-            var tarefa = new TarefaEntity(
-                    "Tarefa",
-                    "Tarefa",
-                    PrioridadeTarefaEnum.ALTA,
-                    LocalDate.now().plusDays(1));
-            tarefa.setId(1L);
-
-            when(tarefaRepository.buscarPorId(1L))
-                    .thenReturn(Optional.of(tarefa));
-            doThrow(new RuntimeException("Falha ao excluir"))
-                    .when(tarefaRepository).excluir(1L);
-
-            assertThrows(RuntimeException.class,
-                    () -> tarefaService.excluir(1L));
-        }
+                verify(tarefaRepository).buscarPorId(1L);
+                verify(tarefaRepository, never()).salvar(any());
+            }
     }
 
     @Nested
@@ -300,7 +316,7 @@ class TarefaServiceTest {
         }
 
         @Test
-        @DisplayName("devePropagarExceptionQuandoRepositoryFalhaAoSalvar")
+        @DisplayName("Deve propagar exception quando repository falha ao salvar")
         void devePropagarExceptionQuandoRepositoryFalhaAoSalvar() {
             var tarefa = new TarefaEntity(
                     "Tarefa",
@@ -343,6 +359,8 @@ class TarefaServiceTest {
 
             when(tarefaRepository.buscarPorId(1L))
                     .thenReturn(Optional.of(tarefa));
+            when(tarefaRepository.salvar(any()))
+                    .thenReturn(tarefa);
 
             tarefaService.atualizarStatus(1L, novoStatus);
 
@@ -384,6 +402,75 @@ class TarefaServiceTest {
             assertThrows(TarefaNaoEncontradaException.class,
                     () -> tarefaService.atualizarStatus(99L, StatusTarefaEnum.EM_ANDAMENTO));
             verify(tarefaRepository, never()).salvar(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("Testes do método excluir")
+    class Excluir {
+
+        @Test
+        @DisplayName("Deve excluir tarefa existente")
+        void deveExcluirTarefaExistente() {
+            var tarefa = new TarefaEntity(
+                    "Tarefa",
+                    "Tarefa",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            tarefa.setId(1L);
+
+            when(tarefaRepository.buscarPorId(1L))
+                    .thenReturn(Optional.of(tarefa));
+
+            tarefaService.excluir(1L);
+
+            verify(tarefaRepository).excluir(1L);
+        }
+
+        @Test
+        @DisplayName("Deve lancar exception ao excluir tarefa inexistente")
+        void deveLancarExceptionAoExcluirTarefaInexistente() {
+            when(tarefaRepository.buscarPorId(99L))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(TarefaNaoEncontradaException.class,
+                    () -> tarefaService.excluir(99L));
+
+            verify(tarefaRepository, never()).excluir(anyLong());
+        }
+
+        @Test
+        @DisplayName("Deve propagar exception quando repository falha ao buscar")
+        void devePropagarExceptionQuandoRepositoryFalhaAoBuscar() {
+            when(tarefaRepository.buscarPorId(99L))
+                    .thenThrow(new RuntimeException());
+
+            assertThrows(RuntimeException.class,
+                    () -> tarefaService.excluir(99L));
+
+            verify(tarefaRepository).buscarPorId(99L);
+        }
+
+        @Test
+        @DisplayName("Deve propagar exception quando repository falha ao excluir")
+        void devePropagarExceptionQuandoRepositoryFalhaAoExcluir() {
+            var tarefa = new TarefaEntity(
+                    "Tarefa",
+                    "Tarefa",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            tarefa.setId(1L);
+
+            when(tarefaRepository.buscarPorId(1L))
+                    .thenReturn(Optional.of(tarefa));
+            doThrow(new RuntimeException("Falha ao excluir"))
+                    .when(tarefaRepository).excluir(1L);
+
+            assertThrows(RuntimeException.class,
+                    () -> tarefaService.excluir(1L));
+
+            verify(tarefaRepository).buscarPorId(1L);
+            verify(tarefaRepository).excluir(1L);
         }
     }
 }

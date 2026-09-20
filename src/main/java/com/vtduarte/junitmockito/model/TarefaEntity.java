@@ -29,5 +29,6 @@ public class TarefaEntity {
         this.dataVencimento = dataVencimento;
         this.criadaEm = LocalDateTime
                 .now(ZoneId.systemDefault());
+        this.concluidaEm = null;
     }
 }
