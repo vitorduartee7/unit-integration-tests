@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.vtduarte</groupId>
-    <artifactId>JUnitMockito</artifactId>
+    <artifactId>unit-integration-tests</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>JUnityMockito</name>
     <description>JUnityMockito</description>

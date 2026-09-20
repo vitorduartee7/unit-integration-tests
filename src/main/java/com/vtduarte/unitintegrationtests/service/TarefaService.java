@@ -1,10 +1,10 @@
-package com.vtduarte.junitmockito.service;
+package com.vtduarte.unitintegrationtests.service;
 
-import com.vtduarte.junitmockito.exception.TarefaNaoEncontradaException;
-import com.vtduarte.junitmockito.model.PrioridadeTarefaEnum;
-import com.vtduarte.junitmockito.model.StatusTarefaEnum;
-import com.vtduarte.junitmockito.model.TarefaEntity;
-import com.vtduarte.junitmockito.repository.TarefaRepository;
+import com.vtduarte.unitintegrationtests.exception.TarefaNaoEncontradaException;
+import com.vtduarte.unitintegrationtests.model.PrioridadeTarefaEnum;
+import com.vtduarte.unitintegrationtests.model.StatusTarefaEnum;
+import com.vtduarte.unitintegrationtests.model.TarefaEntity;
+import com.vtduarte.unitintegrationtests.repository.TarefaRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

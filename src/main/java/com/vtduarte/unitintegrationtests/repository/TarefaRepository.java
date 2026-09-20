@@ -1,7 +1,7 @@
-package com.vtduarte.junitmockito.repository;
+package com.vtduarte.unitintegrationtests.repository;
 
-import com.vtduarte.junitmockito.model.StatusTarefaEnum;
-import com.vtduarte.junitmockito.model.TarefaEntity;
+import com.vtduarte.unitintegrationtests.model.StatusTarefaEnum;
+import com.vtduarte.unitintegrationtests.model.TarefaEntity;
 
 import java.util.List;
 import java.util.Optional;

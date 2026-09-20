@@ -1,4 +1,4 @@
-package com.vtduarte.junitmockito;
+package com.vtduarte.unitintegrationtests;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
