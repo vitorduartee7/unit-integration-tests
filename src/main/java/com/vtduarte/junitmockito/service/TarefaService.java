@@ -57,7 +57,9 @@ public class TarefaService {
         tarefaRepository.salvar(tarefa);
     }
 
-    public void atualizarStatus(TarefaEntity tarefa, StatusTarefaEnum novoStatus) {
+    public void atualizarStatus(Long id, StatusTarefaEnum novoStatus) {
+
+        var tarefa = buscarPorId(id);
 
         StatusTarefaEnum statusAtual = tarefa.getStatus();
 
@@ -82,5 +84,7 @@ public class TarefaService {
                 }
                 break;
         }
+
+        tarefaRepository.salvar(tarefa);
     }
 }

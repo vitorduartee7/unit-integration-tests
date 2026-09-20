@@ -339,10 +339,15 @@ class TarefaServiceTest {
                     PrioridadeTarefaEnum.ALTA,
                     LocalDate.now().plusDays(1));
             tarefa.setStatus(statusAtual);
+            tarefa.setId(1L);
 
-            tarefaService.atualizarStatus(tarefa, novoStatus);
+            when(tarefaRepository.buscarPorId(1L))
+                    .thenReturn(Optional.of(tarefa));
+
+            tarefaService.atualizarStatus(1L, novoStatus);
 
             assertEquals(novoStatus, tarefa.getStatus());
+            verify(tarefaRepository).salvar(tarefa);
         }
 
         @ParameterizedTest
@@ -360,8 +365,25 @@ class TarefaServiceTest {
                     PrioridadeTarefaEnum.ALTA,
                     LocalDate.now().plusDays(1));
             tarefa.setStatus(statusAtual);
+            tarefa.setId(1L);
 
-            assertThrows(IllegalArgumentException.class, () -> tarefaService.atualizarStatus(tarefa, novoStatus));
+            when(tarefaRepository.buscarPorId(1L))
+                    .thenReturn(Optional.of(tarefa));
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> tarefaService.atualizarStatus(1L, novoStatus));
+            verify(tarefaRepository, never()).salvar(any());
+        }
+
+        @Test
+        @DisplayName("Deve lançar exception ao atualizar status de tarefa inexistente")
+        void deveLancarExceptionAoAtualizarStatusTarefaInexistente() {
+            when(tarefaRepository.buscarPorId(99L))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(TarefaNaoEncontradaException.class,
+                    () -> tarefaService.atualizarStatus(99L, StatusTarefaEnum.EM_ANDAMENTO));
+            verify(tarefaRepository, never()).salvar(any());
         }
     }
 }
