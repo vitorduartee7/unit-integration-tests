@@ -7,6 +7,8 @@ import com.vtduarte.junitmockito.model.TarefaEntity;
 import com.vtduarte.junitmockito.repository.TarefaRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 public class TarefaService {
@@ -28,7 +30,7 @@ public class TarefaService {
             throw new IllegalArgumentException("Titulo e obrigatorio");
         }
 
-        if (dataVencimento != null && dataVencimento.isBefore(LocalDate.now())) {
+        if (dataVencimento != null && dataVencimento.isBefore(LocalDate.now(ZoneId.systemDefault()))) {
             throw new IllegalArgumentException("Data de vencimento nao pode ser no passado");
         }
 
@@ -46,9 +48,12 @@ public class TarefaService {
         return tarefaRepository.listarPorStatus(StatusTarefaEnum.PENDENTE);
     }
 
-    public void excluir(Long id) {
-        TarefaEntity tarefa = buscarPorId(id);
-        tarefaRepository.excluir(tarefa.getId());
+    public void marcarComoConcluida(Long id) {
+        var tarefa = buscarPorId(id);
+        validarTransicao(tarefa.getStatus(), StatusTarefaEnum.CONCLUIDA);
+        tarefa.setStatus(StatusTarefaEnum.CONCLUIDA);
+        tarefa.setConcluidaEm(LocalDateTime.now(ZoneId.systemDefault()));
+        tarefaRepository.salvar(tarefa);
     }
 
     public void atualizarPrioridade(Long id, PrioridadeTarefaEnum prioridade) {
@@ -58,33 +63,31 @@ public class TarefaService {
     }
 
     public void atualizarStatus(Long id, StatusTarefaEnum novoStatus) {
-
         var tarefa = buscarPorId(id);
+        validarTransicao(tarefa.getStatus(), novoStatus);
+        tarefa.setStatus(novoStatus);
+        tarefaRepository.salvar(tarefa);
+    }
 
-        StatusTarefaEnum statusAtual = tarefa.getStatus();
+    public void excluir(Long id) {
+        TarefaEntity tarefa = buscarPorId(id);
+        tarefaRepository.excluir(tarefa.getId());
+    }
 
+    private void validarTransicao(StatusTarefaEnum statusAtual, StatusTarefaEnum novoStatus) {
         switch (statusAtual) {
             case PENDENTE, CONCLUIDA:
-                if (novoStatus.equals(StatusTarefaEnum.EM_ANDAMENTO)) {
-                    tarefa.setStatus(StatusTarefaEnum.EM_ANDAMENTO);
-                } else {
+                if (!novoStatus.equals(StatusTarefaEnum.EM_ANDAMENTO)) {
                     throw new IllegalArgumentException("Transição de " + statusAtual
                             + " para " + novoStatus + " não é permitida");
                 }
                 break;
-
             case EM_ANDAMENTO:
-                if (novoStatus.equals(StatusTarefaEnum.CONCLUIDA)) {
-                    tarefa.setStatus(StatusTarefaEnum.CONCLUIDA);
-                } else if (novoStatus.equals(StatusTarefaEnum.PENDENTE)) {
-                    tarefa.setStatus(StatusTarefaEnum.PENDENTE);
-                } else {
+                if (!novoStatus.equals(StatusTarefaEnum.CONCLUIDA) && !novoStatus.equals(StatusTarefaEnum.PENDENTE)) {
                     throw new IllegalArgumentException("Transição de " + statusAtual
                             + " para " + novoStatus + " não é permitida");
                 }
                 break;
         }
-
-        tarefaRepository.salvar(tarefa);
     }
 }
