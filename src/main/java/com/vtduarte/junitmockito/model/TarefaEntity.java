@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Data
 public class TarefaEntity {
@@ -18,6 +19,7 @@ public class TarefaEntity {
     private PrioridadeTarefaEnum prioridade;
     private LocalDate dataVencimento;
     private LocalDateTime criadaEm;
+    private LocalDateTime concluidaEm;
 
     public TarefaEntity(String titulo, String descricao, PrioridadeTarefaEnum prioridade, LocalDate dataVencimento) {
         this.titulo = titulo;
@@ -25,6 +27,7 @@ public class TarefaEntity {
         this.status = StatusTarefaEnum.PENDENTE;
         this.prioridade = prioridade;
         this.dataVencimento = dataVencimento;
-        this.criadaEm = LocalDateTime.now();
+        this.criadaEm = LocalDateTime
+                .now(ZoneId.systemDefault());
     }
 }
