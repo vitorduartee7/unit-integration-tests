@@ -1,4 +1,4 @@
-# Java Testing Study — JUnit 5 + Mockito
+# Testes em Java
 
 Projeto de estudo focado em testes automatizados no ecossistema Java/Spring, construído incrementalmente ao longo de um plano de estudos diário.
 
