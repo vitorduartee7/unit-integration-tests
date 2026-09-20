@@ -229,7 +229,6 @@ class TarefaServiceTest {
 
             assertThrows(TarefaNaoEncontradaException.class,
                     () -> tarefaService.excluir(99L));
-
             verify(tarefaRepository, never()).excluir(anyLong());
         }
 
@@ -260,6 +259,65 @@ class TarefaServiceTest {
 
             assertThrows(RuntimeException.class,
                     () -> tarefaService.excluir(1L));
+        }
+    }
+
+    @Nested
+    @DisplayName("Testes do método atualizar prioridade")
+    class AtualizarPrioridade {
+
+        @Test
+        @DisplayName("Deve atualizar prioridade da tarefa")
+        void deveAtualizarPrioridadeDaTarefa() {
+            var tarefa = new TarefaEntity(
+                    "Tarefa",
+                    "Tarefa",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            tarefa.setId(1L);
+
+            when(tarefaRepository.buscarPorId(1L))
+                    .thenReturn(Optional.of(tarefa));
+            when(tarefaRepository.salvar(any()))
+                    .thenReturn(tarefa);
+
+            tarefaService.atualizarPrioridade(tarefa.getId(), PrioridadeTarefaEnum.MEDIA);
+
+            assertEquals(PrioridadeTarefaEnum.MEDIA, tarefa.getPrioridade());
+            verify(tarefaRepository).buscarPorId(1L);
+            verify(tarefaRepository).salvar(tarefa);
+        }
+
+        @Test
+        @DisplayName("Deve propagar exception quando tarefa nao encontrada")
+        void devePropagarExceptionQuandoTarefaNaoEncontrada() {
+            when(tarefaRepository.buscarPorId(1L))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(TarefaNaoEncontradaException.class,
+                    () -> tarefaService.atualizarPrioridade(1L, PrioridadeTarefaEnum.MEDIA));
+            verify(tarefaRepository, never()).salvar(any());
+        }
+
+        @Test
+        @DisplayName("devePropagarExceptionQuandoRepositoryFalhaAoSalvar")
+        void devePropagarExceptionQuandoRepositoryFalhaAoSalvar() {
+            var tarefa = new TarefaEntity(
+                    "Tarefa",
+                    "Tarefa",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            tarefa.setId(1L);
+
+            when(tarefaRepository.buscarPorId(1L))
+                    .thenReturn(Optional.of(tarefa));
+            when(tarefaRepository.salvar(any()))
+                    .thenThrow(new RuntimeException());
+
+            assertThrows(RuntimeException.class,
+                    () -> tarefaService.atualizarPrioridade(1L, PrioridadeTarefaEnum.MEDIA));
+            verify(tarefaRepository).buscarPorId(1L);
+            verify(tarefaRepository).salvar(tarefa);
         }
     }
 

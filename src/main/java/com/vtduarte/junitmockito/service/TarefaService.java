@@ -52,11 +52,8 @@ public class TarefaService {
     }
 
     public void atualizarPrioridade(Long id, PrioridadeTarefaEnum prioridade) {
-
         var tarefa = buscarPorId(id);
-
         tarefa.setPrioridade(prioridade);
-
         tarefaRepository.salvar(tarefa);
     }
 
