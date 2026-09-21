@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/tarefas")
 @RequiredArgsConstructor
@@ -19,5 +21,10 @@ public class TarefaController {
     @GetMapping("/{id}")
     public ResponseEntity<TarefaEntity> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(service.buscarPorId(id));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<TarefaEntity>> listarTodas() {
+        return ResponseEntity.ok(service.listarTodas());
     }
 }
