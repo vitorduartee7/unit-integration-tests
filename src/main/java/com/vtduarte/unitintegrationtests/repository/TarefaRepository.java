@@ -10,6 +10,7 @@ public interface TarefaRepository {
 
     TarefaEntity salvar(TarefaEntity tarefa);
     Optional<TarefaEntity> buscarPorId(Long id);
+    List<TarefaEntity> listarTodas();
     List<TarefaEntity> listarPorStatus(StatusTarefaEnum status);
     void excluir(Long id);
 }

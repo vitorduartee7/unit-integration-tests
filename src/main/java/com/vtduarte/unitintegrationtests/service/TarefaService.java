@@ -44,6 +44,10 @@ public class TarefaService {
                 .orElseThrow(() -> new TarefaNaoEncontradaException(id));
     }
 
+    public List<TarefaEntity> listarTodas() {
+        return tarefaRepository.listarTodas();
+    }
+
     public List<TarefaEntity> listarPendentes() {
         return tarefaRepository.listarPorStatus(StatusTarefaEnum.PENDENTE);
     }
