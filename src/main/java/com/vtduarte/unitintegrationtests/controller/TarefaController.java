@@ -1,13 +1,13 @@
 package com.vtduarte.unitintegrationtests.controller;
 
+import com.vtduarte.unitintegrationtests.dto.CriarTarefaRequest;
 import com.vtduarte.unitintegrationtests.model.TarefaEntity;
 import com.vtduarte.unitintegrationtests.service.TarefaService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -17,6 +17,12 @@ import java.util.List;
 public class TarefaController {
 
     private final TarefaService service;
+
+    @PostMapping
+    public ResponseEntity<TarefaEntity> criarTarefa(@Valid @RequestBody CriarTarefaRequest request) {
+        var tarefa = service.criar(request.titulo(), request.descricao(), request.prioridade(), request.dataVencimento());
+        return ResponseEntity.status(HttpStatus.CREATED).body(tarefa);
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<TarefaEntity> buscarPorId(@PathVariable Long id) {
