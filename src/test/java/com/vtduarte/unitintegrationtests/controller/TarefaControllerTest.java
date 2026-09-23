@@ -1,5 +1,6 @@
 package com.vtduarte.unitintegrationtests.controller;
 
+import com.vtduarte.unitintegrationtests.dto.AtualizarTarefaRequest;
 import com.vtduarte.unitintegrationtests.dto.CriarTarefaRequest;
 import com.vtduarte.unitintegrationtests.exception.TarefaNaoEncontradaException;
 import com.vtduarte.unitintegrationtests.model.PrioridadeTarefaEnum;
@@ -21,8 +22,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -162,6 +162,45 @@ class TarefaControllerTest {
             mockMvc.perform(get("/tarefas"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(0)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Testes do método atualizar tarefa no controller")
+    class AtualizarTarefa {
+
+        @Test
+        @DisplayName("Deve atualizar tarefa")
+        void deveAtualizarTarefa() throws Exception {
+            var tarefa = new TarefaEntity(
+                    "Tarefa",
+                    "Tarefa",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            tarefa.setId(1L);
+            var request = new AtualizarTarefaRequest(
+                    "Task",
+                    "Task",
+                    PrioridadeTarefaEnum.MEDIA,
+                    LocalDate.now().plusDays(2));
+            tarefa.setTitulo(request.titulo());
+            tarefa.setDescricao(request.descricao());
+            tarefa.setPrioridade(request.prioridade());
+            tarefa.setDataVencimento(request.dataVencimento());
+            when(service.atualizarTarefa(
+                    1L,
+                    request.titulo(),
+                    request.descricao(),
+                    request.prioridade(),
+                    request.dataVencimento())
+            )
+                    .thenReturn(tarefa);
+
+            mockMvc.perform(put("/tarefas/1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.titulo").value("Task"));
         }
     }
 }
