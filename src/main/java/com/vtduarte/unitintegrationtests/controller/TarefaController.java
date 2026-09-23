@@ -1,5 +1,6 @@
 package com.vtduarte.unitintegrationtests.controller;
 
+import com.vtduarte.unitintegrationtests.dto.AtualizarTarefaRequest;
 import com.vtduarte.unitintegrationtests.dto.CriarTarefaRequest;
 import com.vtduarte.unitintegrationtests.model.TarefaEntity;
 import com.vtduarte.unitintegrationtests.service.TarefaService;
@@ -20,7 +21,11 @@ public class TarefaController {
 
     @PostMapping
     public ResponseEntity<TarefaEntity> criarTarefa(@Valid @RequestBody CriarTarefaRequest request) {
-        var tarefa = service.criar(request.titulo(), request.descricao(), request.prioridade(), request.dataVencimento());
+        var tarefa = service.criarTarefa(
+                request.titulo(),
+                request.descricao(),
+                request.prioridade(),
+                request.dataVencimento());
         return ResponseEntity.status(HttpStatus.CREATED).body(tarefa);
     }
 
@@ -32,5 +37,18 @@ public class TarefaController {
     @GetMapping
     public ResponseEntity<List<TarefaEntity>> listarTodas() {
         return ResponseEntity.ok(service.listarTodas());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TarefaEntity> atualizarTarefa(
+            @PathVariable Long id,
+            @Valid @RequestBody AtualizarTarefaRequest request) {
+        var tarefa = service.atualizarTarefa(
+                id,
+                request.titulo(),
+                request.descricao(),
+                request.prioridade(),
+                request.dataVencimento());
+        return ResponseEntity.ok(tarefa);
     }
 }

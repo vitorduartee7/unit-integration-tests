@@ -52,7 +52,7 @@ class TarefaServiceTest {
             when(tarefaRepository.salvar(any()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
-            var tarefa = tarefaService.criar(titulo, descricao, prioridade, dataVencimento);
+            var tarefa = tarefaService.criarTarefa(titulo, descricao, prioridade, dataVencimento);
 
             assertEquals(titulo, tarefa.getTitulo());
             verify(tarefaRepository).salvar(tarefa);
@@ -69,7 +69,7 @@ class TarefaServiceTest {
             when(tarefaRepository.salvar(any()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
-            tarefaService.criar(titulo, descricao, prioridade, dataVencimento);
+            tarefaService.criarTarefa(titulo, descricao, prioridade, dataVencimento);
 
             verify(tarefaRepository).salvar(tarefaCaptor.capture());
 
@@ -91,7 +91,7 @@ class TarefaServiceTest {
             when(tarefaRepository.salvar(any()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
-            var tarefa = tarefaService.criar(titulo, descricao, prioridade, null);
+            var tarefa = tarefaService.criarTarefa(titulo, descricao, prioridade, null);
 
             assertNull(tarefa.getDataVencimento());
             assertEquals(StatusTarefaEnum.PENDENTE, tarefa.getStatus());
@@ -106,7 +106,7 @@ class TarefaServiceTest {
             LocalDate dataVencimento = LocalDate.now().minusDays(1);
 
             assertThrows(IllegalArgumentException.class,
-                    () -> tarefaService.criar(titulo, descricao, prioridade, dataVencimento));
+                    () -> tarefaService.criarTarefa(titulo, descricao, prioridade, dataVencimento));
         }
 
         @Test
@@ -118,7 +118,7 @@ class TarefaServiceTest {
             LocalDate dataVencimento = LocalDate.now().plusDays(1);
 
             assertThrows(IllegalArgumentException.class,
-                    () -> tarefaService.criar(titulo, descricao, prioridade, dataVencimento));
+                    () -> tarefaService.criarTarefa(titulo, descricao, prioridade, dataVencimento));
             verify(tarefaRepository, never()).salvar(any());
         }
 
@@ -133,7 +133,7 @@ class TarefaServiceTest {
             when(tarefaRepository.salvar(any()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
-            var tarefa = tarefaService.criar(titulo, descricao, prioridade, dataVencimento);
+            var tarefa = tarefaService.criarTarefa(titulo, descricao, prioridade, dataVencimento);
 
             assertEquals(prioridade, tarefa.getPrioridade());
         }
@@ -148,7 +148,7 @@ class TarefaServiceTest {
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
 
             assertThrows(IllegalArgumentException.class,
-                    () -> tarefaService.criar(titulo, descricao, prioridade, dataVencimento));
+                    () -> tarefaService.criarTarefa(titulo, descricao, prioridade, dataVencimento));
         }
     }
 

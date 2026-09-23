@@ -19,7 +19,7 @@ public class TarefaService {
         this.tarefaRepository = tarefaRepository;
     }
 
-    public TarefaEntity criar(
+    public TarefaEntity criarTarefa(
             String titulo,
             String descricao,
             PrioridadeTarefaEnum prioridade,
@@ -58,6 +58,31 @@ public class TarefaService {
         tarefa.setStatus(StatusTarefaEnum.CONCLUIDA);
         tarefa.setConcluidaEm(LocalDateTime.now(ZoneId.systemDefault()));
         tarefaRepository.salvar(tarefa);
+    }
+
+    public TarefaEntity atualizarTarefa(
+            Long id,
+            String titulo,
+            String descricao,
+            PrioridadeTarefaEnum prioridade,
+            LocalDate dataVencimento
+    ) {
+        var tarefa = buscarPorId(id);
+
+        if (titulo == null || titulo.isBlank()) {
+            throw new IllegalArgumentException("Titulo e obrigatorio");
+        }
+
+        if (dataVencimento != null && dataVencimento.isBefore(LocalDate.now(ZoneId.systemDefault()))) {
+            throw new IllegalArgumentException("Data de vencimento nao pode ser no passado");
+        }
+
+        tarefa.setTitulo(titulo);
+        tarefa.setDescricao(descricao);
+        tarefa.setPrioridade(prioridade);
+        tarefa.setDataVencimento(dataVencimento);
+
+        return tarefaRepository.salvar(tarefa);
     }
 
     public void atualizarPrioridade(Long id, PrioridadeTarefaEnum prioridade) {

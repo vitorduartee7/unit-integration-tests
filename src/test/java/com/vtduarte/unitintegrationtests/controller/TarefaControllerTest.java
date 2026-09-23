@@ -45,9 +45,21 @@ class TarefaControllerTest {
         @Test
         @DisplayName("Deve criar tarefa com sucesso")
         void deveCriarTarefaComSucesso() throws Exception {
-            var request = new CriarTarefaRequest("Tarefa", "Tarefa", PrioridadeTarefaEnum.ALTA, LocalDate.now().plusDays(1));
-            var tarefa = new TarefaEntity("Tarefa", "Tarefa", PrioridadeTarefaEnum.ALTA, LocalDate.now().plusDays(1));
-            when(service.criar(request.titulo(), request.descricao(), request.prioridade(), request.dataVencimento()))
+            var request = new CriarTarefaRequest(
+                    "Tarefa",
+                    "Tarefa",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            var tarefa = new TarefaEntity(
+                    "Tarefa",
+                    "Tarefa",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            when(service.criarTarefa(
+                    request.titulo(),
+                    request.descricao(),
+                    request.prioridade(),
+                    request.dataVencimento()))
                     .thenReturn(tarefa);
 
             mockMvc.perform(post("/tarefas")
