@@ -1,5 +1,6 @@
 package com.vtduarte.unitintegrationtests.controller;
 
+import com.vtduarte.unitintegrationtests.config.SecurityConfig;
 import com.vtduarte.unitintegrationtests.dto.AlterarStatusRequest;
 import com.vtduarte.unitintegrationtests.dto.AtualizarTarefaRequest;
 import com.vtduarte.unitintegrationtests.dto.CriarTarefaRequest;
@@ -14,7 +15,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
@@ -28,6 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Import(SecurityConfig.class)
 @WebMvcTest(TarefaController.class)
 class TarefaControllerTest {
 
@@ -250,7 +254,8 @@ class TarefaControllerTest {
 
         @Test
         @DisplayName("Deve retornar 204 ao excluir com sucesso")
-        void deveRetornar204aoExcluirComSucesso() throws Exception {
+        @WithMockUser(roles = "ADMIN")
+        void deveRetornar204AoExcluirComSucesso() throws Exception {
             doNothing().when(service).excluir(1L);
 
             mockMvc.perform(delete("/tarefas/1"))
@@ -259,11 +264,27 @@ class TarefaControllerTest {
 
         @Test
         @DisplayName("Deve retornar 404 ao excluir tarefa inexistente")
+        @WithMockUser(roles = "ADMIN")
         void deveRetornar404aoExcluirTarefaInexistente() throws Exception {
             doThrow(new TarefaNaoEncontradaException(99L)).when(service).excluir(99L);
 
             mockMvc.perform(delete("/tarefas/99"))
                     .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("Deve retornar 401 quando não autenticado")
+        void deveRetornar401QuandoNaoAutenticado() throws Exception {
+            mockMvc.perform(delete("/tarefas/1"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("Deve retornar 403 quando autenticado sem permissao")
+        @WithMockUser(roles = "USER")
+        void deveRetornar401QuandoAutenticadoSemPerimissao() throws Exception {
+            mockMvc.perform(delete("/tarefas/1"))
+                    .andExpect(status().isForbidden());
         }
     }
 }
