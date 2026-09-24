@@ -1,6 +1,7 @@
 package com.vtduarte.unitintegrationtests.service;
 
 import com.vtduarte.unitintegrationtests.exception.TarefaNaoEncontradaException;
+import com.vtduarte.unitintegrationtests.exception.TransicaoStatusInvalidaException;
 import com.vtduarte.unitintegrationtests.model.PrioridadeTarefaEnum;
 import com.vtduarte.unitintegrationtests.model.StatusTarefaEnum;
 import com.vtduarte.unitintegrationtests.model.TarefaEntity;
@@ -91,11 +92,11 @@ public class TarefaService {
         tarefaRepository.salvar(tarefa);
     }
 
-    public void atualizarStatus(Long id, StatusTarefaEnum novoStatus) {
+    public TarefaEntity alterarStatus(Long id, StatusTarefaEnum novoStatus) {
         var tarefa = buscarPorId(id);
         validarTransicao(tarefa.getStatus(), novoStatus);
         tarefa.setStatus(novoStatus);
-        tarefaRepository.salvar(tarefa);
+        return tarefaRepository.salvar(tarefa);
     }
 
     public void excluir(Long id) {
@@ -107,13 +108,13 @@ public class TarefaService {
         switch (statusAtual) {
             case PENDENTE, CONCLUIDA:
                 if (!novoStatus.equals(StatusTarefaEnum.EM_ANDAMENTO)) {
-                    throw new IllegalArgumentException("Transição de " + statusAtual
+                    throw new TransicaoStatusInvalidaException("Transição de " + statusAtual
                             + " para " + novoStatus + " não é permitida");
                 }
                 break;
             case EM_ANDAMENTO:
                 if (!novoStatus.equals(StatusTarefaEnum.CONCLUIDA) && !novoStatus.equals(StatusTarefaEnum.PENDENTE)) {
-                    throw new IllegalArgumentException("Transição de " + statusAtual
+                    throw new TransicaoStatusInvalidaException("Transição de " + statusAtual
                             + " para " + novoStatus + " não é permitida");
                 }
                 break;

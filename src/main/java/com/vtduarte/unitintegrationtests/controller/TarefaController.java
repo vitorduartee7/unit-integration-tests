@@ -1,5 +1,6 @@
 package com.vtduarte.unitintegrationtests.controller;
 
+import com.vtduarte.unitintegrationtests.dto.AlterarStatusRequest;
 import com.vtduarte.unitintegrationtests.dto.AtualizarTarefaRequest;
 import com.vtduarte.unitintegrationtests.dto.CriarTarefaRequest;
 import com.vtduarte.unitintegrationtests.model.TarefaEntity;
@@ -50,5 +51,19 @@ public class TarefaController {
                 request.prioridade(),
                 request.dataVencimento());
         return ResponseEntity.ok(tarefa);
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<TarefaEntity> alterarStatus(
+            @PathVariable Long id,
+            @RequestBody AlterarStatusRequest request) {
+        var tarefa = service.alterarStatus(id, request.novoStatus());
+        return ResponseEntity.ok(tarefa);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        service.excluir(id);
+        return ResponseEntity.noContent().build();
     }
 }

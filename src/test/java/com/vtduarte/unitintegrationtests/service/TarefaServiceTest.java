@@ -1,6 +1,7 @@
 package com.vtduarte.unitintegrationtests.service;
 
 import com.vtduarte.unitintegrationtests.exception.TarefaNaoEncontradaException;
+import com.vtduarte.unitintegrationtests.exception.TransicaoStatusInvalidaException;
 import com.vtduarte.unitintegrationtests.model.PrioridadeTarefaEnum;
 import com.vtduarte.unitintegrationtests.model.StatusTarefaEnum;
 import com.vtduarte.unitintegrationtests.model.TarefaEntity;
@@ -270,7 +271,7 @@ class TarefaServiceTest {
                 when(tarefaRepository.buscarPorId(1L))
                         .thenReturn(Optional.of(tarefa));
 
-                assertThrows(IllegalArgumentException.class,
+                assertThrows(TransicaoStatusInvalidaException.class,
                         () -> tarefaService.marcarComoConcluida(1L));
 
                 verify(tarefaRepository).buscarPorId(1L);
@@ -362,7 +363,7 @@ class TarefaServiceTest {
             when(tarefaRepository.salvar(any()))
                     .thenReturn(tarefa);
 
-            tarefaService.atualizarStatus(1L, novoStatus);
+            tarefaService.alterarStatus(1L, novoStatus);
 
             assertEquals(novoStatus, tarefa.getStatus());
             verify(tarefaRepository).salvar(tarefa);
@@ -388,8 +389,8 @@ class TarefaServiceTest {
             when(tarefaRepository.buscarPorId(1L))
                     .thenReturn(Optional.of(tarefa));
 
-            assertThrows(IllegalArgumentException.class,
-                    () -> tarefaService.atualizarStatus(1L, novoStatus));
+            assertThrows(TransicaoStatusInvalidaException.class,
+                    () -> tarefaService.alterarStatus(1L, novoStatus));
             verify(tarefaRepository, never()).salvar(any());
         }
 
@@ -400,7 +401,7 @@ class TarefaServiceTest {
                     .thenReturn(Optional.empty());
 
             assertThrows(TarefaNaoEncontradaException.class,
-                    () -> tarefaService.atualizarStatus(99L, StatusTarefaEnum.EM_ANDAMENTO));
+                    () -> tarefaService.alterarStatus(99L, StatusTarefaEnum.EM_ANDAMENTO));
             verify(tarefaRepository, never()).salvar(any());
         }
     }

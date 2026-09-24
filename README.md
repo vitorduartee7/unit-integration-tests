@@ -11,7 +11,7 @@ O ponto de partida é um `TarefaService` — a camada de lógica de negócio de 
 - **Regras de negócio testadas**: validação de dados, máquina de estados de transição (`PENDENTE ↔ EM_ANDAMENTO ↔ CONCLUIDA`), propagação de exceções de domínio e de infraestrutura
 ## Funcionalidades do `TarefaService`
 
-`criar`, `buscarPorId`, `listarPendentes`, `atualizarStatus`, `atualizarPrioridade`, `excluir`, `marcarComoConcluida` — todas cobertas por testes unitários.
+`criar`, `buscarPorId`, `listarPendentes`, `alterarStatus`, `atualizarPrioridade`, `excluir`, `marcarComoConcluida` — todas cobertas por testes unitários.
 
 ## Próximos passos
 
