@@ -88,6 +88,18 @@ class TarefaControllerTest {
         }
 
         @Test
+        @DisplayName("Deve retornar 400 quando prioridade nula")
+        void deveRetornar400QuandoPrioridadeNula() throws Exception {
+            var request = new CriarTarefaRequest("Tarefa", "Tarefa", null, LocalDate.now().plusDays(1));
+
+            mockMvc.perform(post("/tarefas")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+            verifyNoInteractions(service);
+        }
+
+        @Test
         @DisplayName("Deve retornar 400 quando data de vencimento estiver no passado")
         void deveRetornar400QuandoDataVencimentoNoPassado() throws Exception {
             var request = new CriarTarefaRequest("Tarefa", "Tarefa", PrioridadeTarefaEnum.ALTA, LocalDate.now().minusDays(1));
@@ -106,6 +118,7 @@ class TarefaControllerTest {
 
         @Test
         @DisplayName("Deve buscar tarefa por id")
+        @WithMockUser
         void deveBuscarTarefaPorId() throws Exception {
             var tarefa = new TarefaEntity(
                     "Estudar",
@@ -124,12 +137,20 @@ class TarefaControllerTest {
 
         @Test
         @DisplayName("Deve retornar 404 quando não encontrar tarefa")
+        @WithMockUser
         void deveRetornar404QuandoTarefaNaoEncontrada() throws Exception {
             when(service.buscarPorId(99L))
                     .thenThrow(TarefaNaoEncontradaException.class);
 
             mockMvc.perform(get("/tarefas/99"))
                     .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("Deve retornar 401 quando nao autenticado")
+        void deveRetornar401_quandoNaoAutenticado() throws Exception {
+            mockMvc.perform(get("/tarefas/1"))
+                    .andExpect(status().isUnauthorized());
         }
     }
 
@@ -208,6 +229,28 @@ class TarefaControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.titulo").value("Task"));
         }
+
+        @Test
+        @DisplayName("Deve retornar 404 ao atualizar tarefa inexistente")
+        void deveRetornar404AoAtualizarTarefaInexistente() throws Exception {
+            var request = new AtualizarTarefaRequest(
+                    "Task",
+                    "Task",
+                    PrioridadeTarefaEnum.MEDIA,
+                    LocalDate.now().plusDays(2));
+            when(service.atualizarTarefa(
+                    1L,
+                    request.titulo(),
+                    request.descricao(),
+                    request.prioridade(),
+                    request.dataVencimento()))
+                    .thenThrow(new TarefaNaoEncontradaException(1L));
+
+            mockMvc.perform(put("/tarefas/1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNotFound());
+        }
     }
 
     @Nested
@@ -232,6 +275,19 @@ class TarefaControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("EM_ANDAMENTO"));
+        }
+
+        @Test
+        @DisplayName("Deve retornar 404 ao alterar status de tarefa inexistente")
+        void deveRetornar404AoAlterarStatusDeTarefaInexistente() throws Exception {
+            var request = new AlterarStatusRequest(StatusTarefaEnum.EM_ANDAMENTO);
+            when(service.alterarStatus(1L, request.novoStatus()))
+                    .thenThrow(new TarefaNaoEncontradaException(1L));
+
+            mockMvc.perform(patch("/tarefas/1/status")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNotFound());
         }
 
         @Test

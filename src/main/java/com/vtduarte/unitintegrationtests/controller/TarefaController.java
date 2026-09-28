@@ -3,6 +3,7 @@ package com.vtduarte.unitintegrationtests.controller;
 import com.vtduarte.unitintegrationtests.dto.AlterarStatusRequest;
 import com.vtduarte.unitintegrationtests.dto.AtualizarTarefaRequest;
 import com.vtduarte.unitintegrationtests.dto.CriarTarefaRequest;
+import com.vtduarte.unitintegrationtests.model.StatusTarefaEnum;
 import com.vtduarte.unitintegrationtests.model.TarefaEntity;
 import com.vtduarte.unitintegrationtests.service.TarefaService;
 import jakarta.validation.Valid;
@@ -31,6 +32,7 @@ public class TarefaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(tarefa);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{id}")
     public ResponseEntity<TarefaEntity> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(service.buscarPorId(id));
@@ -39,6 +41,13 @@ public class TarefaController {
     @GetMapping
     public ResponseEntity<List<TarefaEntity>> listarTodas() {
         return ResponseEntity.ok(service.listarTodas());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<TarefaEntity>> listarPorStatus(
+            @RequestParam(required = false)StatusTarefaEnum status
+    ) {
+        return ResponseEntity.ok(service.listarPorStatus(status));
     }
 
     @PutMapping("/{id}")

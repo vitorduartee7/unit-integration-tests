@@ -49,6 +49,13 @@ public class TarefaService {
         return tarefaRepository.listarTodas();
     }
 
+    public List<TarefaEntity> listarPorStatus(StatusTarefaEnum status) {
+        if (status == null) {
+            return listarTodas();
+        }
+        return tarefaRepository.listarPorStatus(status);
+    }
+
     public List<TarefaEntity> listarPendentes() {
         return tarefaRepository.listarPorStatus(StatusTarefaEnum.PENDENTE);
     }
