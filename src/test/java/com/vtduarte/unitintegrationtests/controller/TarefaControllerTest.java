@@ -172,7 +172,7 @@ class TarefaControllerTest {
                     PrioridadeTarefaEnum.ALTA,
                     LocalDate.now().plusDays(1));
             var lista = List.of(tarefa1, tarefa2);
-            when(service.listarTodas())
+            when(service.listarPorStatus(null))
                     .thenReturn(lista);
 
             mockMvc.perform(get("/tarefas"))
@@ -183,12 +183,47 @@ class TarefaControllerTest {
         @Test
         @DisplayName("Deve retornar uma lista vazia")
         void deveRetornarListaVazia() throws Exception {
-            when(service.listarTodas())
+            when(service.listarPorStatus(null))
                     .thenReturn(List.of());
 
             mockMvc.perform(get("/tarefas"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(0)));
+        }
+
+        @Test
+        @DisplayName("Deve filtrar por status")
+        void deveFiltrarPorStatus() throws Exception {
+            var tarefa1 = new TarefaEntity(
+                    "Tarefa1",
+                    "Tarefa1",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            tarefa1.setStatus(StatusTarefaEnum.EM_ANDAMENTO);
+            var tarefa2 = new TarefaEntity(
+                    "Tarefa2",
+                    "Tarefa2",
+                    PrioridadeTarefaEnum.ALTA,
+                    LocalDate.now().plusDays(1));
+            tarefa2.setStatus(StatusTarefaEnum.EM_ANDAMENTO);
+            var lista = List.of(tarefa1, tarefa2);
+            when(service.listarPorStatus(StatusTarefaEnum.EM_ANDAMENTO))
+                    .thenReturn(lista);
+
+            mockMvc.perform(get("/tarefas")
+                            .param("status", "EM_ANDAMENTO"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$", hasSize(2)));
+        }
+
+        @Test
+        @DisplayName("Deve retornar 400 quando status invalido")
+        void deveRetornar400QuandoStatusInvalido() throws Exception {
+            mockMvc.perform(get("/tarefas")
+                            .param("status", "INVALIDO"))
+                    .andExpect(status().isBadRequest());
+
+            verifyNoInteractions(service);
         }
     }
 

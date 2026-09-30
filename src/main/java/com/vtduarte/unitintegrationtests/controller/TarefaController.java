@@ -39,12 +39,7 @@ public class TarefaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TarefaEntity>> listarTodas() {
-        return ResponseEntity.ok(service.listarTodas());
-    }
-
-    @GetMapping
-    public ResponseEntity<List<TarefaEntity>> listarPorStatus(
+    public ResponseEntity<List<TarefaEntity>> listarTodas(
             @RequestParam(required = false)StatusTarefaEnum status
     ) {
         return ResponseEntity.ok(service.listarPorStatus(status));

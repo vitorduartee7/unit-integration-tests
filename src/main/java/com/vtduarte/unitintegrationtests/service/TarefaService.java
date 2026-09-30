@@ -6,12 +6,14 @@ import com.vtduarte.unitintegrationtests.model.PrioridadeTarefaEnum;
 import com.vtduarte.unitintegrationtests.model.StatusTarefaEnum;
 import com.vtduarte.unitintegrationtests.model.TarefaEntity;
 import com.vtduarte.unitintegrationtests.repository.TarefaRepository;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
+@Service
 public class TarefaService {
 
     private final TarefaRepository tarefaRepository;
