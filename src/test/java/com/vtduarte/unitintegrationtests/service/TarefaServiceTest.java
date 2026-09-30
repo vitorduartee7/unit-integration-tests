@@ -19,7 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,10 +30,10 @@ import static org.mockito.Mockito.*;
 class TarefaServiceTest {
 
     @Mock
-    TarefaRepository tarefaRepository;
+    TarefaRepository repository;
 
     @InjectMocks
-    com.vtduarte.unitintegrationtests.service.TarefaService tarefaService;
+    TarefaService service;
 
     @Captor
     private ArgumentCaptor<TarefaEntity> tarefaCaptor;
@@ -50,13 +50,13 @@ class TarefaServiceTest {
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
             LocalDate dataVencimento = LocalDate.now().plusDays(1);
 
-            when(tarefaRepository.salvar(any()))
+            when(repository.save(any()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
-            var tarefa = tarefaService.criarTarefa(titulo, descricao, prioridade, dataVencimento);
+            var tarefa = service.criarTarefa(titulo, descricao, prioridade, dataVencimento);
 
             assertEquals(titulo, tarefa.getTitulo());
-            verify(tarefaRepository).salvar(tarefa);
+            verify(repository).save(tarefa);
         }
 
         @Test
@@ -67,12 +67,12 @@ class TarefaServiceTest {
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
             LocalDate dataVencimento = LocalDate.now().plusDays(1);
 
-            when(tarefaRepository.salvar(any()))
+            when(repository.save(any()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
-            tarefaService.criarTarefa(titulo, descricao, prioridade, dataVencimento);
+            service.criarTarefa(titulo, descricao, prioridade, dataVencimento);
 
-            verify(tarefaRepository).salvar(tarefaCaptor.capture());
+            verify(repository).save(tarefaCaptor.capture());
 
             var tarefaSalva = tarefaCaptor.getValue();
             assertEquals(titulo, tarefaSalva.getTitulo());
@@ -89,10 +89,10 @@ class TarefaServiceTest {
             String descricao = "Beba Agua";
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
 
-            when(tarefaRepository.salvar(any()))
+            when(repository.save(any()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
-            var tarefa = tarefaService.criarTarefa(titulo, descricao, prioridade, null);
+            var tarefa = service.criarTarefa(titulo, descricao, prioridade, null);
 
             assertNull(tarefa.getDataVencimento());
             assertEquals(StatusTarefaEnum.PENDENTE, tarefa.getStatus());
@@ -107,7 +107,7 @@ class TarefaServiceTest {
             LocalDate dataVencimento = LocalDate.now().minusDays(1);
 
             assertThrows(IllegalArgumentException.class,
-                    () -> tarefaService.criarTarefa(titulo, descricao, prioridade, dataVencimento));
+                    () -> service.criarTarefa(titulo, descricao, prioridade, dataVencimento));
         }
 
         @Test
@@ -119,8 +119,8 @@ class TarefaServiceTest {
             LocalDate dataVencimento = LocalDate.now().plusDays(1);
 
             assertThrows(IllegalArgumentException.class,
-                    () -> tarefaService.criarTarefa(titulo, descricao, prioridade, dataVencimento));
-            verify(tarefaRepository, never()).salvar(any());
+                    () -> service.criarTarefa(titulo, descricao, prioridade, dataVencimento));
+            verify(repository, never()).save(any());
         }
 
         @ParameterizedTest
@@ -131,10 +131,10 @@ class TarefaServiceTest {
             String descricao = "Beba Agua";
             LocalDate dataVencimento = LocalDate.now().plusDays(1);
 
-            when(tarefaRepository.salvar(any()))
+            when(repository.save(any()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
-            var tarefa = tarefaService.criarTarefa(titulo, descricao, prioridade, dataVencimento);
+            var tarefa = service.criarTarefa(titulo, descricao, prioridade, dataVencimento);
 
             assertEquals(prioridade, tarefa.getPrioridade());
         }
@@ -149,7 +149,7 @@ class TarefaServiceTest {
             PrioridadeTarefaEnum prioridade = PrioridadeTarefaEnum.ALTA;
 
             assertThrows(IllegalArgumentException.class,
-                    () -> tarefaService.criarTarefa(titulo, descricao, prioridade, dataVencimento));
+                    () -> service.criarTarefa(titulo, descricao, prioridade, dataVencimento));
         }
     }
 
@@ -167,64 +167,24 @@ class TarefaServiceTest {
                     LocalDate.now().plusDays(1));
             tarefa.setId(1L);
 
-            when(tarefaRepository.buscarPorId(1L))
+            when(repository.findById(1L))
                     .thenReturn(Optional.of(tarefa));
 
-            var tarefaBuscada = tarefaService.buscarPorId(1L);
+            var tarefaBuscada = service.buscarPorId(1L);
 
             assertEquals(tarefa, tarefaBuscada);
-            verify(tarefaRepository).buscarPorId(1L);
+            verify(repository).findById(1L);
         }
 
         @Test
         @DisplayName("Deve lancar exception quando tarefa nao for encontrada")
         void deveLancarExceptionQuandoTarefaNaoEncontrada() {
-            when(tarefaRepository.buscarPorId(99L))
+            when(repository.findById(99L))
                     .thenReturn(Optional.empty());
 
             assertThrows(TarefaNaoEncontradaException.class,
-                    () -> tarefaService.buscarPorId(99L));
-            verify(tarefaRepository).buscarPorId(99L);
-        }
-    }
-
-    @Nested
-    @DisplayName("Testes do método listar pendentes")
-    class ListarPendentes {
-
-        @Test
-        @DisplayName("Deve retornar uma lista de tarefas pendentes")
-        void deveListarTarefasPendentes() {
-            var tarefa1 = new TarefaEntity(
-                    "Tarefa1",
-                    "Tarefa1",
-                    PrioridadeTarefaEnum.ALTA,
-                    LocalDate.now().plusDays(1));
-            var tarefa2 = new TarefaEntity(
-                    "Tarefa2",
-                    "Tarefa2",
-                    PrioridadeTarefaEnum.ALTA,
-                    LocalDate.now().plusDays(1));
-            List<TarefaEntity> listaComDuasTarefas = List.of(tarefa1, tarefa2);
-
-            when(tarefaRepository.listarPorStatus(StatusTarefaEnum.PENDENTE))
-                    .thenReturn(listaComDuasTarefas);
-
-            var lista = tarefaService.listarPendentes();
-
-            assertEquals(listaComDuasTarefas, lista);
-        }
-
-        @Test
-        @DisplayName("Deve retornar uma lista vazia quando nao tiver tarefa pendente")
-        void deveRetornarListaVaziaQuandoNaoTiverTarefaPendente() {
-            List<TarefaEntity> listaVazia = List.of();
-            when(tarefaRepository.listarPorStatus(StatusTarefaEnum.PENDENTE))
-                    .thenReturn(listaVazia);
-
-            var lista = tarefaService.listarPendentes();
-
-            assertTrue(lista.isEmpty());
+                    () -> service.buscarPorId(99L));
+            verify(repository).findById(99L);
         }
     }
 
@@ -243,15 +203,15 @@ class TarefaServiceTest {
             tarefa.setId(1L);
             tarefa.setStatus(StatusTarefaEnum.EM_ANDAMENTO);
 
-            when(tarefaRepository.buscarPorId(1L))
+            when(repository.findById(1L))
                     .thenReturn(Optional.of(tarefa));
-            when(tarefaRepository.salvar(any()))
+            when(repository.save(any()))
                     .thenReturn(tarefa);
 
-            tarefaService.marcarComoConcluida(1L);
+            service.marcarComoConcluida(1L);
 
-            verify(tarefaRepository).buscarPorId(1L);
-            verify(tarefaRepository).salvar(tarefaCaptor.capture());
+            verify(repository).findById(1L);
+            verify(repository).save(tarefaCaptor.capture());
 
             var tarefaSalva = tarefaCaptor.getValue();
             assertNotNull(tarefaSalva.getConcluidaEm());
@@ -268,14 +228,14 @@ class TarefaServiceTest {
                         LocalDate.now().plusDays(1));
                 tarefa.setId(1L);
 
-                when(tarefaRepository.buscarPorId(1L))
+                when(repository.findById(1L))
                         .thenReturn(Optional.of(tarefa));
 
                 assertThrows(TransicaoStatusInvalidaException.class,
-                        () -> tarefaService.marcarComoConcluida(1L));
+                        () -> service.marcarComoConcluida(1L));
 
-                verify(tarefaRepository).buscarPorId(1L);
-                verify(tarefaRepository, never()).salvar(any());
+                verify(repository).findById(1L);
+                verify(repository, never()).save(any());
             }
     }
 
@@ -293,27 +253,27 @@ class TarefaServiceTest {
                     LocalDate.now().plusDays(1));
             tarefa.setId(1L);
 
-            when(tarefaRepository.buscarPorId(1L))
+            when(repository.findById(1L))
                     .thenReturn(Optional.of(tarefa));
-            when(tarefaRepository.salvar(any()))
+            when(repository.save(any()))
                     .thenReturn(tarefa);
 
-            tarefaService.atualizarPrioridade(tarefa.getId(), PrioridadeTarefaEnum.MEDIA);
+            service.atualizarPrioridade(tarefa.getId(), PrioridadeTarefaEnum.MEDIA);
 
             assertEquals(PrioridadeTarefaEnum.MEDIA, tarefa.getPrioridade());
-            verify(tarefaRepository).buscarPorId(1L);
-            verify(tarefaRepository).salvar(tarefa);
+            verify(repository).findById(1L);
+            verify(repository).save(tarefa);
         }
 
         @Test
         @DisplayName("Deve propagar exception quando tarefa nao encontrada")
         void devePropagarExceptionQuandoTarefaNaoEncontrada() {
-            when(tarefaRepository.buscarPorId(1L))
+            when(repository.findById(1L))
                     .thenReturn(Optional.empty());
 
             assertThrows(TarefaNaoEncontradaException.class,
-                    () -> tarefaService.atualizarPrioridade(1L, PrioridadeTarefaEnum.MEDIA));
-            verify(tarefaRepository, never()).salvar(any());
+                    () -> service.atualizarPrioridade(1L, PrioridadeTarefaEnum.MEDIA));
+            verify(repository, never()).save(any());
         }
 
         @Test
@@ -326,15 +286,15 @@ class TarefaServiceTest {
                     LocalDate.now().plusDays(1));
             tarefa.setId(1L);
 
-            when(tarefaRepository.buscarPorId(1L))
+            when(repository.findById(1L))
                     .thenReturn(Optional.of(tarefa));
-            when(tarefaRepository.salvar(any()))
+            when(repository.save(any()))
                     .thenThrow(new RuntimeException());
 
             assertThrows(RuntimeException.class,
-                    () -> tarefaService.atualizarPrioridade(1L, PrioridadeTarefaEnum.MEDIA));
-            verify(tarefaRepository).buscarPorId(1L);
-            verify(tarefaRepository).salvar(tarefa);
+                    () -> service.atualizarPrioridade(1L, PrioridadeTarefaEnum.MEDIA));
+            verify(repository).findById(1L);
+            verify(repository).save(tarefa);
         }
     }
 
@@ -358,15 +318,15 @@ class TarefaServiceTest {
             tarefa.setStatus(statusAtual);
             tarefa.setId(1L);
 
-            when(tarefaRepository.buscarPorId(1L))
+            when(repository.findById(1L))
                     .thenReturn(Optional.of(tarefa));
-            when(tarefaRepository.salvar(any()))
+            when(repository.save(any()))
                     .thenReturn(tarefa);
 
-            tarefaService.alterarStatus(1L, novoStatus);
+            service.alterarStatus(1L, novoStatus);
 
             assertEquals(novoStatus, tarefa.getStatus());
-            verify(tarefaRepository).salvar(tarefa);
+            verify(repository).save(tarefa);
         }
 
         @ParameterizedTest
@@ -386,23 +346,56 @@ class TarefaServiceTest {
             tarefa.setStatus(statusAtual);
             tarefa.setId(1L);
 
-            when(tarefaRepository.buscarPorId(1L))
+            when(repository.findById(1L))
                     .thenReturn(Optional.of(tarefa));
 
             assertThrows(TransicaoStatusInvalidaException.class,
-                    () -> tarefaService.alterarStatus(1L, novoStatus));
-            verify(tarefaRepository, never()).salvar(any());
+                    () -> service.alterarStatus(1L, novoStatus));
+            verify(repository, never()).save(any());
         }
 
         @Test
         @DisplayName("Deve lançar exception ao atualizar status de tarefa inexistente")
         void deveLancarExceptionAoAtualizarStatusTarefaInexistente() {
-            when(tarefaRepository.buscarPorId(99L))
+            when(repository.findById(99L))
                     .thenReturn(Optional.empty());
 
             assertThrows(TarefaNaoEncontradaException.class,
-                    () -> tarefaService.alterarStatus(99L, StatusTarefaEnum.EM_ANDAMENTO));
-            verify(tarefaRepository, never()).salvar(any());
+                    () -> service.alterarStatus(99L, StatusTarefaEnum.EM_ANDAMENTO));
+            verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Deve preencher concluidaEm ao alterar status para CONCLUIDA")
+        void devePreencherConcluidaEmAoConcluirViaAlterarStatus() {
+            var tarefa = new TarefaEntity("Hidrate-se", "Beba agua",
+                    PrioridadeTarefaEnum.ALTA, LocalDate.now().plusDays(1));
+            tarefa.setId(1L);
+            tarefa.setStatus(StatusTarefaEnum.EM_ANDAMENTO);
+
+            when(repository.findById(1L)).thenReturn(Optional.of(tarefa));
+            when(repository.save(any())).thenReturn(tarefa);
+
+            service.alterarStatus(1L, StatusTarefaEnum.CONCLUIDA);
+
+            assertNotNull(tarefa.getConcluidaEm());
+        }
+
+        @Test
+        @DisplayName("Deve limpar concluidaEm ao reabrir tarefa concluida")
+        void deveLimparConcluidaEmAoReabrirTarefa() {
+            var tarefa = new TarefaEntity("Hidrate-se", "Beba agua",
+                    PrioridadeTarefaEnum.ALTA, LocalDate.now().plusDays(1));
+            tarefa.setId(1L);
+            tarefa.setStatus(StatusTarefaEnum.CONCLUIDA);
+            tarefa.setConcluidaEm(LocalDateTime.now());
+
+            when(repository.findById(1L)).thenReturn(Optional.of(tarefa));
+            when(repository.save(any())).thenReturn(tarefa);
+
+            service.alterarStatus(1L, StatusTarefaEnum.EM_ANDAMENTO);
+
+            assertNull(tarefa.getConcluidaEm());
         }
     }
 
@@ -413,65 +406,57 @@ class TarefaServiceTest {
         @Test
         @DisplayName("Deve excluir tarefa existente")
         void deveExcluirTarefaExistente() {
-            var tarefa = new TarefaEntity(
-                    "Tarefa",
-                    "Tarefa",
-                    PrioridadeTarefaEnum.ALTA,
-                    LocalDate.now().plusDays(1));
-            tarefa.setId(1L);
+            when(repository.existsById(1L))
+                    .thenReturn(true);
 
-            when(tarefaRepository.buscarPorId(1L))
-                    .thenReturn(Optional.of(tarefa));
+            service.excluir(1L);
 
-            tarefaService.excluir(1L);
-
-            verify(tarefaRepository).excluir(1L);
+            verify(repository).deleteById(1L);
         }
 
         @Test
         @DisplayName("Deve lancar exception ao excluir tarefa inexistente")
         void deveLancarExceptionAoExcluirTarefaInexistente() {
-            when(tarefaRepository.buscarPorId(99L))
-                    .thenReturn(Optional.empty());
+            when(repository.existsById(1L))
+                    .thenReturn(false);
 
             assertThrows(TarefaNaoEncontradaException.class,
-                    () -> tarefaService.excluir(99L));
+                    () -> service.excluir(1L));
 
-            verify(tarefaRepository, never()).excluir(anyLong());
+            verify(repository, never())
+                    .deleteById(1L);
         }
 
         @Test
-        @DisplayName("Deve propagar exception quando repository falha ao buscar")
-        void devePropagarExceptionQuandoRepositoryFalhaAoBuscar() {
-            when(tarefaRepository.buscarPorId(99L))
-                    .thenThrow(new RuntimeException());
+        @DisplayName("Deve propagar exception quando repository falha ao verificar se a tarefa existe")
+        void devePropagarExceptionQuandoRepositoryFalhaAoVerificarExistencia() {
+            var excecaoDoBanco = new RuntimeException("Erro no banco");
+            when(repository.existsById(1L))
+                    .thenThrow(excecaoDoBanco);
 
-            assertThrows(RuntimeException.class,
-                    () -> tarefaService.excluir(99L));
+            var capturada = assertThrows(RuntimeException.class,
+                    () -> service.excluir(1L));
+            assertSame(excecaoDoBanco, capturada);
 
-            verify(tarefaRepository).buscarPorId(99L);
+            verify(repository).existsById(1L);
+            verify(repository, never()).deleteById(1L);
         }
 
         @Test
         @DisplayName("Deve propagar exception quando repository falha ao excluir")
         void devePropagarExceptionQuandoRepositoryFalhaAoExcluir() {
-            var tarefa = new TarefaEntity(
-                    "Tarefa",
-                    "Tarefa",
-                    PrioridadeTarefaEnum.ALTA,
-                    LocalDate.now().plusDays(1));
-            tarefa.setId(1L);
+            var excecaoDoBanco = new RuntimeException("Erro no banco");
+            when(repository.existsById(1L))
+                    .thenReturn(true);
+            doThrow(excecaoDoBanco)
+                    .when(repository).deleteById(1L);
 
-            when(tarefaRepository.buscarPorId(1L))
-                    .thenReturn(Optional.of(tarefa));
-            doThrow(new RuntimeException("Falha ao excluir"))
-                    .when(tarefaRepository).excluir(1L);
+            var capturada = assertThrows(RuntimeException.class,
+                    () -> service.excluir(1L));
+            assertSame(excecaoDoBanco, capturada);
 
-            assertThrows(RuntimeException.class,
-                    () -> tarefaService.excluir(1L));
-
-            verify(tarefaRepository).buscarPorId(1L);
-            verify(tarefaRepository).excluir(1L);
+            verify(repository).existsById(1L);
+            verify(repository).deleteById(1L);
         }
     }
 }

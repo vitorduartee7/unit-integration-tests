@@ -6,6 +6,7 @@ import com.vtduarte.unitintegrationtests.model.PrioridadeTarefaEnum;
 import com.vtduarte.unitintegrationtests.model.StatusTarefaEnum;
 import com.vtduarte.unitintegrationtests.model.TarefaEntity;
 import com.vtduarte.unitintegrationtests.repository.TarefaRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,13 +15,10 @@ import java.time.ZoneId;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class TarefaService {
 
-    private final TarefaRepository tarefaRepository;
-
-    public TarefaService(TarefaRepository tarefaRepository) {
-        this.tarefaRepository = tarefaRepository;
-    }
+    private final TarefaRepository repository;
 
     public TarefaEntity criarTarefa(
             String titulo,
@@ -39,35 +37,33 @@ public class TarefaService {
 
         var tarefa = new TarefaEntity(titulo, descricao, prioridade, dataVencimento);
 
-        return tarefaRepository.salvar(tarefa);
+        return repository.save(tarefa);
     }
 
     public TarefaEntity buscarPorId(Long id) {
-        return tarefaRepository.buscarPorId(id)
+        return repository.findById(id)
                 .orElseThrow(() -> new TarefaNaoEncontradaException(id));
-    }
-
-    public List<TarefaEntity> listarTodas() {
-        return tarefaRepository.listarTodas();
     }
 
     public List<TarefaEntity> listarPorStatus(StatusTarefaEnum status) {
         if (status == null) {
-            return listarTodas();
+            return repository.findAll();
         }
-        return tarefaRepository.listarPorStatus(status);
-    }
-
-    public List<TarefaEntity> listarPendentes() {
-        return tarefaRepository.listarPorStatus(StatusTarefaEnum.PENDENTE);
+        return repository.findByStatus(status);
     }
 
     public void marcarComoConcluida(Long id) {
+        alterarStatus(id, StatusTarefaEnum.CONCLUIDA);
+    }
+
+    public TarefaEntity alterarStatus(Long id, StatusTarefaEnum novoStatus) {
         var tarefa = buscarPorId(id);
-        validarTransicao(tarefa.getStatus(), StatusTarefaEnum.CONCLUIDA);
-        tarefa.setStatus(StatusTarefaEnum.CONCLUIDA);
-        tarefa.setConcluidaEm(LocalDateTime.now(ZoneId.systemDefault()));
-        tarefaRepository.salvar(tarefa);
+        validarTransicao(tarefa.getStatus(), novoStatus);
+        tarefa.setStatus(novoStatus);
+        tarefa.setConcluidaEm(novoStatus == StatusTarefaEnum.CONCLUIDA
+                ? LocalDateTime.now()
+                : null);
+        return repository.save(tarefa);
     }
 
     public TarefaEntity atualizarTarefa(
@@ -92,25 +88,20 @@ public class TarefaService {
         tarefa.setPrioridade(prioridade);
         tarefa.setDataVencimento(dataVencimento);
 
-        return tarefaRepository.salvar(tarefa);
+        return repository.save(tarefa);
     }
 
     public void atualizarPrioridade(Long id, PrioridadeTarefaEnum prioridade) {
         var tarefa = buscarPorId(id);
         tarefa.setPrioridade(prioridade);
-        tarefaRepository.salvar(tarefa);
-    }
-
-    public TarefaEntity alterarStatus(Long id, StatusTarefaEnum novoStatus) {
-        var tarefa = buscarPorId(id);
-        validarTransicao(tarefa.getStatus(), novoStatus);
-        tarefa.setStatus(novoStatus);
-        return tarefaRepository.salvar(tarefa);
+        repository.save(tarefa);
     }
 
     public void excluir(Long id) {
-        TarefaEntity tarefa = buscarPorId(id);
-        tarefaRepository.excluir(tarefa.getId());
+        if (!repository.existsById(id)) {
+            throw new TarefaNaoEncontradaException(id);
+        }
+        repository.deleteById(id);
     }
 
     private void validarTransicao(StatusTarefaEnum statusAtual, StatusTarefaEnum novoStatus) {
